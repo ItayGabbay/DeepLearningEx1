@@ -3,7 +3,7 @@ import sys
 
 
 def initialize_parameters(layer_dims):
-    l___ = """
+    """
 
     :param layer_dims: an array of the dimensions of each layer in the network (layer 0 is the size of the
             flattened input, layer L is the output sigmoid)
@@ -11,7 +11,7 @@ def initialize_parameters(layer_dims):
             (W1…WL, b1…bL).
     """
 
-    if (len(layer_dims) < 2):
+    if len(layer_dims) < 2:
         raise NeuralNetworkMustHaveInputAndOutputLayers
     network = {}
 
@@ -69,7 +69,7 @@ def linear_activation_forward(A_prev, W, B, activation):
     return A, (linear_cache, activation_cache)
 
 
-def L_model_forward(X, parameters, use_batchnorm):
+def L_model_forward(X, parameters, use_batchnorm=0):
     """
     Implement forward propagation for the [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID computation
     :param X: The data, numpy array of shape (input size, number of examples)
