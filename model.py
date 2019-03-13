@@ -3,6 +3,7 @@ from feedforward import initialize_parameters, L_model_forward, compute_cost
 from backprop import L_model_backward, Update_parameters
 import random
 
+
 def l_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, use_batchnorm=False):
 
     costs = []
@@ -15,7 +16,6 @@ def l_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, 
         iteration_costs = []
 
         for minibatch in mini_batches:
-            print(minibatch["X"].shape)
             AL, caches = L_model_forward(minibatch["X"], network, use_batchnorm)
             cost = compute_cost(AL, minibatch["Y"])
             iteration_costs.append(cost)
@@ -34,19 +34,20 @@ def l_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, 
 
     return network, costs
 
+
 def predict(X, Y, parameters):
-    print("AA")
+    raise NotImplementedError
 
 
 def _divide_to_mini_batches(X, Y, batch_size):
     batches = []
-    num_of_samples = X.shape[0]
+    num_of_samples = X.shape[1]
     shuffled_indexes = list(range(0, num_of_samples))
     random.shuffle(shuffled_indexes)
     shuffled_indexes = np.array(shuffled_indexes)
     for batch_num in range(0, num_of_samples // batch_size):
         batch_indexes = shuffled_indexes.take(list(range(batch_num*batch_size,(batch_num+1)*batch_size)), axis=0)
-        minibatch = {"X": np.take(X, batch_indexes, axis=0), "Y": np.take(Y, batch_indexes)}
+        minibatch = {"X": np.take(X, batch_indexes, axis=1), "Y": np.take(Y, batch_indexes)}
         batches.append(minibatch)
 
     return batches

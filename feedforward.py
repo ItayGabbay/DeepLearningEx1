@@ -15,10 +15,9 @@ def initialize_parameters(layer_dims):
         raise NeuralNetworkMustHaveInputAndOutputLayers
     network = {}
 
-    for index, layer in enumerate(layer_dims, 1):
-        prev_layer = layer_dims[index - 1]
-        network['W' + str(index)] = np.random.randn(layer, prev_layer) * 0.01
-        network['B' + str(index)] = np.zeros((layer, 1))
+    for index in range(1, len(layer_dims)):
+        network['W' + str(index)] = np.random.randn(layer_dims[index], layer_dims[index-1]) * 0.01
+        network['B' + str(index)] = np.zeros((layer_dims[index], 1))
 
     return network
 
@@ -83,14 +82,15 @@ def L_model_forward(X, parameters, use_batchnorm=0):
     caches = list()
 
     num_of_layers = len(parameters) // 2
-
-    for layer in range(num_of_layers // 2):
-        W = parameters["W" + str(layer + 1)]
-        B = parameters["B" + str(layer + 1)]
-        A, cache = linear_activation_forward(X, W, B, activation="relu")
+    current_A = X
+    for layer in range(1, num_of_layers):
+        W = parameters["W" + str(layer)]
+        B = parameters["B" + str(layer)]
+        A, cache = linear_activation_forward(current_A, W, B, activation="relu")
         if use_batchnorm:
             A = apply_batchnorm(A)
         caches.append(cache)
+        current_A = A
 
     W = parameters["W" + str(num_of_layers)]
     B = parameters["B" + str(num_of_layers)]
@@ -108,7 +108,7 @@ def compute_cost(AL, Y):
     :return:
         cost – the cross-entropy cost
     """
-    m = Y.shape[1]
+    m = Y.shape[0]
 
     cost = - np.sum(Y * np.log(AL) + (1 - Y) * np.log(1 - AL)) / m
 

@@ -92,11 +92,11 @@ def Update_parameters(parameters, grads, learning_rate):
         parameters – the updated values of the parameters object provided as input
 
     """
-    num_layers = len(parameters)
+    num_layers = len(parameters) // 2
 
-    for layer in range(num_layers):
-        parameters["W" + str(layer + 1)] -= learning_rate * grads["dW" + str(layer + 1)]
-        parameters["b" + str(layer + 1)] -= learning_rate * grads["db" + str(layer + 1)]
+    for layer in range(1, num_layers):
+        parameters["W" + str(layer)] -= learning_rate * grads["dW" + str(layer)]
+        parameters["B" + str(layer)] -= learning_rate * grads["db" + str(layer)]
 
     return parameters
 
