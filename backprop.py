@@ -94,7 +94,7 @@ def Update_parameters(parameters, grads, learning_rate):
     """
     num_layers = len(parameters) // 2
 
-    for layer in range(1, num_layers):
+    for layer in range(1, num_layers + 1):
         parameters["W" + str(layer)] -= learning_rate * grads["dW" + str(layer)]
         parameters["B" + str(layer)] -= learning_rate * grads["db" + str(layer)]
 
@@ -125,5 +125,7 @@ def sigmoid_backward(dA, activation_cache):
     :return:
         dZ – gradient of the cost with respect to Z
     """
-    # x = activation_cache
-    return dA * (1 - dA)
+    x = activation_cache
+    sigm = 1/(1+np.exp(-x))
+    dZ = dA * sigm * (1-sigm)
+    return dZ

@@ -36,7 +36,22 @@ def l_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, 
 
 
 def predict(X, Y, parameters):
-    raise NotImplementedError
+
+    m = X.shape[1]
+    layers = len(parameters) // 2
+    predictions = np.zeros((1, m))
+
+    probas, caches = L_model_forward(X, parameters)
+
+    for i in range(0, probas.shape[1]):
+        if probas[0, i] > 0.5:
+            predictions[0, i] = 1
+        else:
+            predictions[0, i] = 0
+
+    print("Accuracy: " + str(np.sum((predictions == Y) / m)))
+
+    return predictions
 
 
 def _divide_to_mini_batches(X, Y, batch_size):
@@ -50,7 +65,7 @@ def _divide_to_mini_batches(X, Y, batch_size):
     shuffled_indexes = np.array(shuffled_indexes)
     for batch_num in range(0, num_of_samples // batch_size):
         batch_indexes = shuffled_indexes.take(list(range(batch_num*batch_size,(batch_num+1)*batch_size)), axis=0)
-        minibatch = {"X": np.take(trans_X, batch_indexes, axis=0).T, "Y": np.take(Y, batch_indexes)}
+        minibatch = {"X": np.take(trans_X, batch_indexes, axis=0).T, "Y": np.take(Y, batch_indexes).reshape(1, batch_size)}
         batches.append(minibatch)
 
     return batches
