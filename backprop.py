@@ -1,5 +1,5 @@
 import numpy as np
-from feedforward import ActivationFunctionNotFound
+from feedforward import ActivationFunctionNotFound, compute_cost
 
 
 def Linear_backward(dZ, cache):
@@ -38,11 +38,12 @@ def linear_activation_backward(dA, cache, activation):
     """
 
     linear_cache, activation_cache = cache
-
     if activation == 'relu':
         dZ = relu_backward(dA, activation_cache)
     elif activation == 'sigmoid':
         dZ = sigmoid_backward(dA, activation_cache)
+    elif activation == 'softmax':
+        dZ = softmax_backward(dA, activation_cache)
     else:
         raise ActivationFunctionNotFound
 
@@ -65,8 +66,12 @@ def L_model_backward(AL, Y, caches):
     Grads = {}
     num_layers = len(caches)
 
-    dAL = - (np.divide(Y, AL) - np.divide(1 - Y, 1 - AL))
-    dAOutput, dWOutput, dbOutput = linear_activation_backward(dAL, caches[num_layers - 1], activation="sigmoid")
+    # dAL = - (np.divide(Y, AL) - np.divide(1 - Y, 1 - AL))
+
+    # dAL = compute_cost(AL, Y)
+    # print(dAL.shape)
+    # dAOutput, dWOutput, dbOutput = linear_activation_backward(dAL, caches[num_layers - 1], activation="softmax")
+    dAOutput, dWOutput, dbOutput = Linear_backward(AL - Y, caches[num_layers - 1][0])
     Grads["dA" + str(num_layers)] = dAOutput
     Grads["dW" + str(num_layers)] = dWOutput
     Grads["db" + str(num_layers)] = dbOutput
@@ -129,3 +134,7 @@ def sigmoid_backward(dA, activation_cache):
     sigm = 1/(1+np.exp(-x))
     dZ = dA * sigm * (1-sigm)
     return dZ
+
+def softmax_backward(dA, activation_cache):
+    y = activation_cache
+    dZ = dA - activation_cache

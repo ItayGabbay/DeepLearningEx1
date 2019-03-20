@@ -58,8 +58,8 @@ def linear_activation_forward(A_prev, W, B, activation):
 
     z, linear_cache = linear_forward(A_prev, W, B)
 
-    if activation == "sigmoid":
-        A, activation_cache = sigmoid(z)
+    if activation == "softmax":
+        A, activation_cache = softmax(z)
     elif activation == "relu":
         A, activation_cache = relu(z)
     else:
@@ -94,24 +94,41 @@ def L_model_forward(X, parameters, use_batchnorm=0):
 
     W = parameters["W" + str(num_of_layers)]
     B = parameters["B" + str(num_of_layers)]
-    AL, cache = linear_activation_forward(A, W, B, activation="sigmoid")
+    AL, cache = linear_activation_forward(A, W, B, activation="softmax")
     caches.append(cache)
 
     return AL, caches
 
+def softmax(x):
+    A = np.exp(x) / np.sum(np.exp(x), axis=0)
+    Z = x
+    return A, Z
 
 def compute_cost(AL, Y):
     """
 
-    :param AL: Probability vector corresponding to your label predictions, shape (1, number of examples)
+    :param AL: Probability vector corresponding to your label predictions, shape (number_of_classes, number of examples)
     :param Y: the labels vector (i.e. the ground truth)
     :return:
         cost – the cross-entropy cost
     """
+    def bla(x) :
+        return np.exp(x) / np.sum(np.exp(x), axis=0)
     m = Y.shape[1]
+    p = np.apply_along_axis(bla, 0, AL)
+    # log = -np.log(p[Y, range(m)])
+    log=[]
+    cls_sum = np.zeros(10)
+    # print(AL.shape)
 
-    cost = - np.sum(Y * np.log(AL) + (1 - Y) * np.log(1 - AL)) / m
+    for sample in range(m):
+        log_sum = 0
+        for cls in range(Y.shape[0]):
+            cls_sum[cls] += Y[cls][sample]*np.log(AL[cls][sample])
 
+
+    cost = (- cls_sum / m).T
+    print("Cost is:", np.sum(cost))
     return cost
 
 

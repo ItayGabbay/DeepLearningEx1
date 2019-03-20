@@ -17,7 +17,7 @@ def l_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, 
 
         for minibatch in mini_batches:
             AL, caches = L_model_forward(minibatch["X"], network, use_batchnorm)
-            cost = compute_cost(AL, minibatch["Y"])
+            cost = np.sum(compute_cost(AL, minibatch["Y"]))
             iteration_costs.append(cost)
 
             # Gradient decent
@@ -65,7 +65,7 @@ def _divide_to_mini_batches(X, Y, batch_size):
     shuffled_indexes = np.array(shuffled_indexes)
     for batch_num in range(0, num_of_samples // batch_size):
         batch_indexes = shuffled_indexes.take(list(range(batch_num*batch_size,(batch_num+1)*batch_size)), axis=0)
-        minibatch = {"X": np.take(trans_X, batch_indexes, axis=0).T, "Y": np.take(Y, batch_indexes).reshape(1, batch_size)}
+        minibatch = {"X": np.take(trans_X, batch_indexes, axis=0).T, "Y": np.take(Y, batch_indexes, axis=0).T}
         batches.append(minibatch)
 
     return batches
