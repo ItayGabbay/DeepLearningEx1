@@ -112,23 +112,14 @@ def compute_cost(AL, Y):
     :return:
         cost – the cross-entropy cost
     """
-    def bla(x) :
-        return np.exp(x) / np.sum(np.exp(x), axis=0)
     m = Y.shape[1]
-    p = np.apply_along_axis(bla, 0, AL)
-    # log = -np.log(p[Y, range(m)])
-    log=[]
     cls_sum = np.zeros(10)
-    # print(AL.shape)
 
     for sample in range(m):
-        log_sum = 0
         for cls in range(Y.shape[0]):
             cls_sum[cls] += Y[cls][sample]*np.log(AL[cls][sample])
 
-
     cost = (- cls_sum / m).T
-    print("Cost is:", np.sum(cost))
     return cost
 
 
@@ -149,18 +140,18 @@ def apply_batchnorm(A):
     return NA
 
 
-def sigmoid(Z):
-    """
-
-    :param Z: The linear component of the activation function
-    :return:
-        A – the activations of the layer
-        activation_cache – returns Z, which will be useful for the backpropagation
-
-    """
-    A = 1 / (1 + np.exp(-Z))
-    activation_cache = Z
-    return A, activation_cache
+# def sigmoid(Z):
+#     """
+#
+#     :param Z: The linear component of the activation function
+#     :return:
+#         A – the activations of the layer
+#         activation_cache – returns Z, which will be useful for the backpropagation
+#
+#     """
+#     A = 1 / (1 + np.exp(-Z))
+#     activation_cache = Z
+#     return A, activation_cache
 
 
 def relu(Z):
