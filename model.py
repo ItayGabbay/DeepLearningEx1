@@ -52,7 +52,7 @@ def predict(X, Y, parameters):
         # else:
         #     predictions[0, i] = 0
 
-    print("Accuracy: " + str(np.sum(predictions == Y)/m))
+    print("Accuracy: " + str(np.sum(predictions == Y)/(m*10)))
 
     return predictions
 
