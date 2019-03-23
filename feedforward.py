@@ -82,15 +82,15 @@ def L_model_forward(X, parameters, use_batchnorm=0):
     caches = list()
 
     num_of_layers = len(parameters) // 2
-    current_A = X
+    A = X
     for layer in range(1, num_of_layers):
+        A_prev = A
         W = parameters["W" + str(layer)]
         B = parameters["B" + str(layer)]
-        A, cache = linear_activation_forward(current_A, W, B, activation="relu")
+        A, cache = linear_activation_forward(A_prev, W, B, activation="relu")
         if use_batchnorm:
             A = apply_batchnorm(A)
         caches.append(cache)
-        current_A = A
 
     W = parameters["W" + str(num_of_layers)]
     B = parameters["B" + str(num_of_layers)]

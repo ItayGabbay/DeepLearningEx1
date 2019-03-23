@@ -115,10 +115,14 @@ def relu_backward(dA, activation_cache):
     :return:
         dZ – gradient of the cost with respect to Z
     """
-    x = activation_cache
-    dA[x > 0] = 1
-    dA[x <= 0] = 0
-    return dA
+    Z = np.array(activation_cache, copy=True)
+    Z[activation_cache > 0] = 1
+    Z[activation_cache <= 0] = 0
+
+    dZ = np.array(dA, copy=True)
+    dZ[Z <= 0] = 0
+
+    return dZ
 
 
 def sigmoid_backward(dA, activation_cache):
