@@ -16,7 +16,7 @@ def initialize_parameters(layer_dims):
     network = {}
 
     for index in range(1, len(layer_dims)):
-        network['W' + str(index)] = np.random.randn(layer_dims[index], layer_dims[index-1]) * 0.01
+        network['W' + str(index)] = np.random.randn(layer_dims[index], layer_dims[index-1]) / np.sqrt(layer_dims[index-1])
         network['B' + str(index)] = np.zeros((layer_dims[index], 1))
 
     return network
