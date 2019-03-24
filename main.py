@@ -17,6 +17,6 @@ x_train = np.delete(x_train, valid_index, axis=0).T
 y_train = np.delete(y_train, valid_index, axis=0)
 
 layers_dims = [784,20,10]
-network, costs = l_layer_model(x_train, y_train, x_valid, y_valid, layers_dims, 0.09, 2000, 12000, False)
+network, costs = l_layer_model(x_train, y_train, x_valid, y_valid, layers_dims, 0.09, 2000, 600, False)
 predict(x_train, y_train.T, network)
 predict(x_test.T, y_test.T, network)
