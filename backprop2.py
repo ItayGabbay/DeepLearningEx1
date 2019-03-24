@@ -21,8 +21,8 @@ def linear_activation_backward(dA, cache, activation):
 
 
 def relu_backward(dA, activation_cache):
-    dZ = np.array(dA, copy=True)
-    dZ[activation_cache <= 0] = 0
+    relu_grad = activation_cache > 0
+    dZ = dA * relu_grad
 
     return dZ
 
@@ -33,7 +33,8 @@ def softmax_backward(dA, activation_cache):
 
 def L_model_backward(AL, Y, caches):
     grads = {}
-    dAL = (AL - Y) / Y.shape[1]
+    # dAL = np.multiply(AL, np.multiply(1 - AL, Y - AL))
+    dAL = (AL - Y)
     num_of_layers = len(caches)
     grads["dA" + str(num_of_layers)], \
     grads["dW" + str(num_of_layers)], \

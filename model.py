@@ -9,10 +9,9 @@ def l_layer_model(X, Y, x_valid, y_valid, layers_dims, learning_rate, num_iterat
     costs = []
     # Initializing
     network = initialize_parameters(layers_dims)
+    train_mini_batch = _get_mini_batch(X, Y, batch_size)
     for i in range(0, num_iterations):
         # Dividing to mini batches
-
-        train_mini_batch = _get_mini_batch(X, Y, batch_size)
 
         AL, caches = L_model_forward(train_mini_batch["X"], network, use_batchnorm)
         cost = np.sum(compute_cost(AL, train_mini_batch["Y"]))
@@ -25,8 +24,7 @@ def l_layer_model(X, Y, x_valid, y_valid, layers_dims, learning_rate, num_iterat
         if i % 100 == 0:
             costs.append(cost)
             print("Iteration:", i, " Total cost is:", cost)
-
-        predict(x_valid, y_valid.T, network)
+            predict(x_valid, y_valid.T, network)
 
 
     return network, costs
