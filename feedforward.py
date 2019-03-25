@@ -113,14 +113,15 @@ def compute_cost(AL, Y):
         cost – the cross-entropy cost
     """
     m = Y.shape[1]
-    cls_sum = np.zeros(10)
-
-    for sample in range(m):
-        for cls in range(Y.shape[0]):
-            cls_sum[cls] += Y[cls][sample]*np.log(AL[cls][sample])
-
-    cost = (- cls_sum / m).T
-    return cost
+    # cls_sum = np.zeros(10)
+    #
+    # for sample in range(m):
+    #     for cls in range(Y.shape[0]):
+    #         cls_sum[cls] += Y[cls][sample]*np.log(AL[cls][sample])
+    #
+    # cost = (- cls_sum / m).T
+    log_likelihood = -np.log(AL[Y.argmax(axis=0), range(m)])
+    return log_likelihood / m
 
 
 def apply_batchnorm(A):

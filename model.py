@@ -6,14 +6,15 @@ import random
 
 def l_layer_model(X, Y, x_valid, y_valid, layers_dims, learning_rate, num_iterations, batch_size, use_batchnorm=False):
 
-    costs = []
+    training_costs = []
+    validation_costs = []
     # Initializing
     network = initialize_parameters(layers_dims)
     iteration_count = 0
     epochs = 0
     not_improving_iterations = 0
-    best_val_accuracy = 0
-    while not_improving_iterations < 300:
+    best_val_cost = 9999999
+    while not_improving_iterations < 100:
         epochs += 1
         print("Starting Epoch number", epochs)
 
@@ -29,24 +30,26 @@ def l_layer_model(X, Y, x_valid, y_valid, layers_dims, learning_rate, num_iterat
 
             network = update_parameters(network, grads, learning_rate)
 
+            val_cost = np.sum(compute_cost(L_model_forward(x_valid, network, use_batchnorm)[0], y_valid.T))
             if iteration_count % 100 == 0:
-                costs.append(cost)
-                predictions, accuracy = predict(x_valid, y_valid.T, network)
-                print("Iteration:", iteration_count, " Total cost is:", cost)
+                training_costs.append((iteration_count, cost))
+                print("Iteration:", iteration_count, " TRAIN:", cost)
+                validation_costs.append((iteration_count, val_cost))
+                print("Iteration:", iteration_count, "VALID:", val_cost)
 
-            if accuracy  > best_val_accuracy:
-                best_val_accuracy = accuracy
+            if val_cost < best_val_cost:
+                best_val_cost = val_cost
                 not_improving_iterations = 0
             else:
                 not_improving_iterations += 1
 
-            if not_improving_iterations == 300:
+            if not_improving_iterations == 100:
                 break
 
             iteration_count += 1
 
 
-    return network, costs
+    return network, training_costs, validation_costs
 
 
 def predict(X, Y, parameters):
@@ -66,19 +69,6 @@ def predict(X, Y, parameters):
     print("Accuracy: " + str(accuracy))
 
     return predictions, accuracy
-
-
-# def _get_mini_batch(X, Y, batch_size):
-#     # It's faster to select from axis 0
-#     trans_X = X.T
-#     num_of_samples = trans_X.shape[0]
-#     shuffled_indexes = list(range(0, num_of_samples))
-#     random.shuffle(shuffled_indexes)
-#     shuffled_indexes = np.array(shuffled_indexes)
-#     batch_indexes = shuffled_indexes.take(list(range(batch_size)), axis=0)
-#     minibatch = {"X": np.take(trans_X, batch_indexes, axis=0).T, "Y": np.take(Y, batch_indexes, axis=0).T}
-#
-#     return minibatch
 
 
 def _divide_to_mini_batches(X, Y, batch_size):
