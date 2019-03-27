@@ -48,16 +48,15 @@ def l_layer_model(X, Y, x_valid, y_valid, layers_dims, learning_rate, num_iterat
 
             iteration_count += 1
 
-
     return network, training_costs, validation_costs
 
 
-def predict(X, Y, parameters):
+def predict(X, Y, parameters, use_batchnorm = False):
 
     m = X.shape[1]
     predictions = np.zeros((10, m))
 
-    probas, caches = L_model_forward(X, parameters)
+    probas, caches = L_model_forward(X, parameters, use_batchnorm)
     correct = 0
     for i in range(0, probas.shape[1]):
         predictions[np.argmax(probas[:,i]), i] = 1

@@ -18,10 +18,10 @@ x_train = np.delete(x_train, valid_index, axis=0).T
 y_train = np.delete(y_train, valid_index, axis=0)
 
 layers_dims = [784,20,7,5,10]
-network, train_costs, valid_costs = l_layer_model(x_train, y_train, x_valid, y_valid, layers_dims, 0.009, 10000, 60, False)
-train_pred, train_acc = predict(x_train, y_train.T, network)
-valid_pred, valid_acc = predict(x_valid, y_valid.T, network)
-test_pred, test_acc = predict(x_test.T, y_test.T, network)
+network, train_costs, valid_costs = l_layer_model(x_train, y_train, x_valid, y_valid, layers_dims, 0.009, 10000, 600, True)
+train_pred, train_acc = predict(x_train, y_train.T, network, True)
+valid_pred, valid_acc = predict(x_valid, y_valid.T, network, True)
+test_pred, test_acc = predict(x_test.T, y_test.T, network, True)
 
 with open('./costs.txt', 'w') as f:
     f.write("--------TRAIN COSTS--------- \n")
