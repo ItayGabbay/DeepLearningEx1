@@ -29,7 +29,7 @@ with open('./costs.txt', 'w') as f:
     f.write("\n--------VALID COSTS---------\n")
     f.write(str(valid_costs))
 
-with open('./results.txt', 'w') as f:
+with open('./results_normalization.txt', 'w') as f:
     f.write("Training Accuracy:" + str(train_acc))
     f.write("\n")
     f.write("Validation Accuracy:" + str(valid_acc))

@@ -16,7 +16,8 @@ def initialize_parameters(layer_dims):
     network = {}
 
     for index in range(1, len(layer_dims)):
-        network['W' + str(index)] = np.random.randn(layer_dims[index], layer_dims[index-1]) / np.sqrt(layer_dims[index-1])
+        network['W' + str(index)] = np.random.randn(layer_dims[index], layer_dims[index - 1]) / np.sqrt(
+            layer_dims[index - 1])
         network['B' + str(index)] = np.zeros((layer_dims[index], 1))
 
     return network
@@ -36,12 +37,13 @@ def linear_forward(A, W, b):
     """
 
     Z = np.dot(W, A) + b
+
     linear_cache = (A, W, b)
 
     return Z, linear_cache
 
 
-def linear_activation_forward(A_prev, W, B, activation):
+def linear_activation_forward(A_prev, W, B, activation, use_batchnorm):
     """
     Implement the forward propagation for the LINEAR->ACTIVATION layer
 
@@ -49,14 +51,18 @@ def linear_activation_forward(A_prev, W, B, activation):
     :param W: The weights matrix of the current layer
     :param B: The bias vector of the current layer
     :param activation: The activation function to be used (a string, either “sigmoid” or “relu”)
+    :param use_batchnorm: Flag indicating if to perform batch normalization
 
     :return:
         A – The activations of the current layer
-        cache – A joint dictionary containing both linear_cache and activation_cache
+        cache – A joint dictionary containing both linear_cache, activation_cache and bn_cache
 
     """
 
     z, linear_cache = linear_forward(A_prev, W, B)
+    bn_cache = {}
+    if (use_batchnorm):
+        z, bn_cache = apply_batchnorm(z)
 
     if activation == "softmax":
         A, activation_cache = softmax(z)
@@ -65,7 +71,7 @@ def linear_activation_forward(A_prev, W, B, activation):
     else:
         raise ActivationFunctionNotFound
 
-    return A, (linear_cache, activation_cache)
+    return A, (linear_cache, activation_cache, bn_cache)
 
 
 def L_model_forward(X, parameters, use_batchnorm=0):
@@ -87,22 +93,22 @@ def L_model_forward(X, parameters, use_batchnorm=0):
         A_prev = A
         W = parameters["W" + str(layer)]
         B = parameters["B" + str(layer)]
-        A, cache = linear_activation_forward(A_prev, W, B, activation="relu")
-        if use_batchnorm:
-            A = apply_batchnorm(A)
+        A, cache = linear_activation_forward(A_prev, W, B, activation="relu", use_batchnorm=use_batchnorm)
         caches.append(cache)
 
     W = parameters["W" + str(num_of_layers)]
     B = parameters["B" + str(num_of_layers)]
-    AL, cache = linear_activation_forward(A, W, B, activation="softmax")
+    AL, cache = linear_activation_forward(A, W, B, activation="softmax", use_batchnorm=0)
     caches.append(cache)
 
     return AL, caches
+
 
 def softmax(x):
     A = np.exp(x) / np.sum(np.exp(x), axis=0)
     Z = x
     return A, Z
+
 
 def compute_cost(AL, Y):
     """
@@ -119,7 +125,7 @@ def compute_cost(AL, Y):
     #     for cls in range(Y.shape[0]):
     #         cls_sum[cls] += Y[cls][sample]*np.log(AL[cls][sample])
     #
-    # cost = (- cls_sum / m).T
+    # cost = (- cls_sum / m).Ta
     log_likelihood = -np.log(AL[Y.argmax(axis=0), range(m)])
     return log_likelihood / m
 
@@ -131,28 +137,14 @@ def apply_batchnorm(A):
     :param A: The activation values of a given layer
     :return:
         NA - the normalized activation values, based on the formula learned in class
-
+        bn_cache - A dictionary containing both A, A_norm, mu, var for back propagation
     """
     mean = np.mean(A, axis=0)
     variance = np.var(A, axis=0)
 
     NA = (A - mean) / np.sqrt(variance + sys.float_info.epsilon)
 
-    return NA
-
-
-# def sigmoid(Z):
-#     """
-#
-#     :param Z: The linear component of the activation function
-#     :return:
-#         A – the activations of the layer
-#         activation_cache – returns Z, which will be useful for the backpropagation
-#
-#     """
-#     A = 1 / (1 + np.exp(-Z))
-#     activation_cache = Z
-#     return A, activation_cache
+    return NA, (A, NA, mean, variance)
 
 
 def relu(Z):

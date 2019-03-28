@@ -26,7 +26,7 @@ def l_layer_model(X, Y, x_valid, y_valid, layers_dims, learning_rate, num_iterat
             cost = np.sum(compute_cost(AL, minibatch["Y"]))
 
             # Gradient decent
-            grads = L_model_backward(AL, minibatch["Y"], caches)
+            grads = L_model_backward(AL, minibatch["Y"], caches, use_batchnorm)
 
             network = update_parameters(network, grads, learning_rate)
 
