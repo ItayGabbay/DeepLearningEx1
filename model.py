@@ -1,11 +1,11 @@
 import numpy as np
 from feedforward import initialize_parameters, L_model_forward, compute_cost
-from backprop2 import L_model_backward, update_parameters
+from backprop import L_model_backward, update_parameters
 import random
 
 
-def l_layer_model(X, Y, x_valid, y_valid, layers_dims, learning_rate, num_iterations, batch_size, use_batchnorm=False):
-
+def l_layer_model(X, Y, x_valid, y_valid, layers_dims, learning_rate, num_iterations, batch_size,
+                  use_batchnorm=False, dropout_rate=0):
     training_costs = []
     validation_costs = []
     # Initializing
@@ -22,11 +22,11 @@ def l_layer_model(X, Y, x_valid, y_valid, layers_dims, learning_rate, num_iterat
         mini_batches = _divide_to_mini_batches(X, Y, batch_size)
 
         for minibatch in mini_batches:
-            AL, caches = L_model_forward(minibatch["X"], network, use_batchnorm)
+            AL, caches = L_model_forward(minibatch["X"], network, use_batchnorm, dropout_rate)
             cost = np.sum(compute_cost(AL, minibatch["Y"]))
 
             # Gradient decent
-            grads = L_model_backward(AL, minibatch["Y"], caches, use_batchnorm)
+            grads = L_model_backward(AL, minibatch["Y"], caches, use_batchnorm, dropout_rate)
 
             network = update_parameters(network, grads, learning_rate)
 
@@ -51,17 +51,16 @@ def l_layer_model(X, Y, x_valid, y_valid, layers_dims, learning_rate, num_iterat
     return network, training_costs, validation_costs
 
 
-def predict(X, Y, parameters, use_batchnorm = False):
-
+def predict(X, Y, parameters, use_batchnorm=False):
     m = X.shape[1]
     predictions = np.zeros((10, m))
 
-    probas, caches = L_model_forward(X, parameters, use_batchnorm)
+    probas, caches = L_model_forward(X, parameters, use_batchnorm, dropout_rate=0)
     correct = 0
     for i in range(0, probas.shape[1]):
-        predictions[np.argmax(probas[:,i]), i] = 1
+        predictions[np.argmax(probas[:, i]), i] = 1
 
-        if Y[np.argmax(probas[:,i]), i] == 1:
+        if Y[np.argmax(probas[:, i]), i] == 1:
             correct += 1
 
     accuracy = correct / m
@@ -80,7 +79,7 @@ def _divide_to_mini_batches(X, Y, batch_size):
     random.shuffle(shuffled_indexes)
     shuffled_indexes = np.array(shuffled_indexes)
     for batch_num in range(0, num_of_samples // batch_size):
-        batch_indexes = shuffled_indexes.take(list(range(batch_num*batch_size,(batch_num+1)*batch_size)), axis=0)
+        batch_indexes = shuffled_indexes.take(list(range(batch_num * batch_size, (batch_num + 1) * batch_size)), axis=0)
         minibatch = {"X": np.take(trans_X, batch_indexes, axis=0).T, "Y": np.take(Y, batch_indexes, axis=0).T}
         batches.append(minibatch)
 

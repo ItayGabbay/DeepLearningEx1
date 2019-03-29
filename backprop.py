@@ -1,8 +1,28 @@
 import numpy as np
-from feedforward import ActivationFunctionNotFound, compute_cost
+from feedforward import ActivationFunctionNotFound
 
 
-def Linear_backward(dZ, cache):
+def batchnorm_backward(dZ, bn_cache):
+    Z, Znorm, mu, var = bn_cache
+
+    N, D = dZ.shape
+
+    Z_mu = Z - mu
+    std_inv = 1. / np.sqrt(var + 1e-8)
+
+    dvar = np.sum(dZ * Z_mu, axis=0) * -.5 * std_inv ** 3
+    dmu = np.sum(dZ * -std_inv, axis=0) + dvar * np.mean(-2. * Z_mu, axis=0)
+
+    dZ_BN = (dZ * std_inv) + (dvar * 2 * Z_mu / N) + (dmu / N)
+
+    return dZ_BN
+
+
+def dropout_backward(dA, A_mask):
+    return dA * A_mask
+
+
+def linear_backward(dZ, cache):
     """
     Implements the linear part of the backward propagation process for a single layer
 
@@ -13,6 +33,7 @@ def Linear_backward(dZ, cache):
         dW -- Gradient of the cost with respect to W (current layer l), same shape as W
         db -- Gradient of the cost with respect to b (current layer l), same shape as b
     """
+
     A_prev, W, b = cache
     m = A_prev.shape[1]
 
@@ -23,7 +44,7 @@ def Linear_backward(dZ, cache):
     return dA_prev, dW, db
 
 
-def linear_activation_backward(dA, cache, activation):
+def linear_activation_backward(dA, cache, activation, use_batchnorm, dropout_rate):
     """
     Implements the backward propagation for the LINEAR->ACTIVATION layer. The function
     first computes dZ and then applies the linear_backward function.
@@ -31,62 +52,76 @@ def linear_activation_backward(dA, cache, activation):
     :param dA: post activation gradient of the current layer
     :param cache: contains both the linear cache and the activations cache
     :param activation: which activation function was used in feedforward
+    :param use_batchnorm: A boolean flag used to determine whether to apply batchnorm after the activation
+    :param dropout_rate: The random percentage of neurons to dropout at each layer. 0 means no dropout.
     :return:
         dA_prev – Gradient of the cost with respect to the activation (of the previous layer l-1), same shape as A_prev
         dW – Gradient of the cost with respect to W (current layer l), same shape as W
         db – Gradient of the cost with respect to b (current layer l), same shape as b
     """
+    linear_cache, activation_cache, bn_cache, dropout_cache = cache
+    use_dropout = dropout_rate > 0
+    if use_dropout:
+        dA = dropout_backward(dA, dropout_cache)
 
-    linear_cache, activation_cache = cache
-    if activation == 'relu':
+    if activation == "relu":
         dZ = relu_backward(dA, activation_cache)
-    elif activation == 'sigmoid':
-        dZ = sigmoid_backward(dA, activation_cache)
-    elif activation == 'softmax':
-        dZ = softmax_backward(dA, activation_cache)
     else:
         raise ActivationFunctionNotFound
 
-    dA_prev, dW, db = Linear_backward(dZ, linear_cache)
-    return dA_prev, dW, db
+    if use_batchnorm:
+        dZ = batchnorm_backward(dZ, bn_cache)
+
+    return linear_backward(dZ, linear_cache)
 
 
-def L_model_backward(AL, Y, caches):
+def relu_backward(dA, activation_cache):
+    """
+    Implements backward propagation for a ReLU unit
+
+    :param dA: the post-activation gradient
+    :param activation_cache: contains Z (stored during the forward propagation)
+    :return:
+        dZ – gradient of the cost with respect to Z
+    """
+    relu_grad = activation_cache > 0
+    dZ = dA * relu_grad
+
+    return dZ
+
+
+def L_model_backward(AL, Y, caches, use_batchnorm=0, dropout_rate=0):
     """
     Implement the backward propagation process for the entire network.
 
     :param AL: The probabilities vector, the output of the forward propagation (L_model_forward)
     :param Y: The true labels vector (the "ground truth" - true classifications)
-    :param caches: List of caches containing for each layer: a) the linear cache; b) the activation cache
+    :param caches: List of caches for each layer
+    :param use_batchnorm: A boolean flag used to determine whether to apply batchnorm after the activation
+    :param dropout_rate: The random percentage of neurons to dropout at each layer. 0 means no dropout.
     :return:
         Grads - a dictionary with the gradients
-
     """
 
-    Grads = {}
-    num_layers = len(caches)
+    grads = {}
+    dAL = (AL - Y)
+    num_of_layers = len(caches)
 
-    # dAL = - (np.divide(Y, AL) - np.divide(1 - Y, 1 - AL))
+    grads["dA" + str(num_of_layers)], \
+    grads["dW" + str(num_of_layers)], \
+    grads["db" + str(num_of_layers)] = linear_backward(dAL, caches[num_of_layers - 1][0])
 
-    # dAL = compute_cost(AL, Y)
-    # print(dAL.shape)
-    # dAOutput, dWOutput, dbOutput = linear_activation_backward(dAL, caches[num_layers - 1], activation="softmax")
-    dAOutput, dWOutput, dbOutput = Linear_backward(AL - Y, caches[num_layers - 1][0])
-    Grads["dA" + str(num_layers)] = dAOutput
-    Grads["dW" + str(num_layers)] = dWOutput
-    Grads["db" + str(num_layers)] = dbOutput
+    for l in reversed(range(num_of_layers - 1)):
+        A_prev, dW, db = linear_activation_backward(grads["dA" + str(l + 2)], caches[l], "relu",
+                                                    use_batchnorm, dropout_rate)
+        grads["dA" + str(l + 1)] = A_prev
+        grads["dW" + str(l + 1)] = dW
+        grads["db" + str(l + 1)] = db
 
-    for layer in reversed(range(num_layers - 1)):
-        cache = caches[layer]
-        dA_prev, dW, db = linear_activation_backward(Grads["dA" + str(layer + 2)], cache, activation="relu")
-        Grads["dA" + str(layer + 1)] = dA_prev
-        Grads["dW" + str(layer + 1)] = dW
-        Grads["db" + str(layer + 1)] = db
-
-    return Grads
+    return grads
 
 
-def Update_parameters(parameters, grads, learning_rate):
+def update_parameters(parameters, grads, learning_rate):
     """
     Updates parameters using gradient descent
 
@@ -104,41 +139,3 @@ def Update_parameters(parameters, grads, learning_rate):
         parameters["B" + str(layer)] -= learning_rate * grads["db" + str(layer)]
 
     return parameters
-
-
-def relu_backward(dA, activation_cache):
-    """
-    Implements backward propagation for a ReLU unit
-
-    :param dA: the post-activation gradient
-    :param activation_cache: contains Z (stored during the forward propagation)
-    :return:
-        dZ – gradient of the cost with respect to Z
-    """
-    Z = np.array(activation_cache, copy=True)
-    Z[activation_cache > 0] = 1
-    Z[activation_cache <= 0] = 0
-
-    dZ = np.array(dA, copy=True)
-    dZ[Z <= 0] = 0
-
-    return dZ
-
-
-def sigmoid_backward(dA, activation_cache):
-    """
-    Implements backward propagation for a sigmoid unit
-
-    :param dA: The post-activation gradient
-    :param activation_cache: Contains Z (stored during the forward propagation)
-    :return:
-        dZ – gradient of the cost with respect to Z
-    """
-    x = activation_cache
-    sigm = 1/(1+np.exp(-x))
-    dZ = dA * sigm * (1-sigm)
-    return dZ
-
-def softmax_backward(dA, activation_cache):
-    y = activation_cache
-    dZ = dA - activation_cache
